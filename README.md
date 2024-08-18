@@ -1,40 +1,22 @@
 # vector-embeddings-store
-Connect Amazon Bedrock to Postgres on EC2 with LangChain
+Sample python code to Connect Amazon Bedrock with Postgres on EC2 with LangChain. This is useful when you are running a Postgres database on an AWS EC2 instance.
 
-import os
-import boto3
-from langchain.embeddings import BedrockEmbeddings
-from langchain.vectorstores.pgvector import PGVector, DistanceStrategy
+# Here's a breakdown of the code:
 
-# Load environment variables
-PGVECTOR_HOST = os.environ.get('PGVECTOR_HOST')
-PGVECTOR_PORT = os.environ.get('PGVECTOR_PORT')
-PGVECTOR_DATABASE = os.environ.get('PGVECTOR_DATABASE')
-PGVECTOR_USER = os.environ.get('PGVECTOR_USER')
-PGVECTOR_PASSWORD = os.environ.get('PGVECTOR_PASSWORD')
+1. Import the necessary modules and classes from boto3, langchain.embeddings, and langchain.vectorstores.pgvector.
+2. Load the required environment variables for the PostgreSQL database connection (PGVECTOR_HOST, PGVECTOR_PORT, PGVECTOR_DATABASE, PGVECTOR_USER, PGVECTOR_PASSWORD).
+3. Initialize the Amazon Bedrock client using boto3.client('bedrock').
+4. Initialize the text embedding model using BedrockEmbeddings from LangChain, passing the Bedrock client.
+5. Create a connection string for the PostgreSQL database using the environment variables.
+6. Create an instance of PGVector from LangChain, passing the connection string, embedding function, distance strategy, and the collection name for storing vector embeddings.
+7. Add a sample text to the vector store using vector_store.add_texts([text]).
+8. Perform a similarity search on the vector store using vector_store.similarity_search(query, k=3), which returns the top 3 most similar texts to the given query. 
 
-# Initialize the Bedrock client
-bedrock_client = boto3.client('bedrock')
+# Note:
 
-# Initialize the text embedding model
-embeddings = BedrockEmbeddings(bedrock_client=bedrock_client)
+- Make sure to replace the environment variable names ( PGVECTOR_HOST, PGVECTOR_PORT, PGVECTOR_DATABASE, PGVECTOR_USER, PGVECTOR_PASSWORD) with the appropriate values for your PostgreSQL database running on the EC2 instance.
+- The EC2 instance and the Amazon Bedrock service should be in the same VPC to allow communication between them.
+- Ensure that the necessary security group rules are in place to allow inbound and outbound traffic between the EC2 instance and the Amazon Bedrock service.
+- This code assumes that you have already set up the PostgreSQL database with the pgvector extension enabled and created the necessary tables or collections for storing vector embeddings.
 
-# Create a connection string for the PostgreSQL database
-connection_string = f"postgresql://{PGVECTOR_USER}:{PGVECTOR_PASSWORD}@{PGVECTOR_HOST}:{PGVECTOR_PORT}/{PGVECTOR_DATABASE}"
-
-# Create a PGVector instance for the vector database
-vector_store = PGVector(
-    connection_string=connection_string,
-    embedding_function=embeddings,
-    distance_strategy=DistanceStrategy.EUCLIDEAN,
-    collection_name="vector_embeddings"
-)
-
-# Example usage: Add a vector embedding to the database
-text = "This is a sample text for vector embedding."
-vector_store.add_texts([text])
-
-# Example usage: Search for similar texts
-query = "What is a vector embedding?"
-results = vector_store.similarity_search(query, k=3)
-print(results)
+By following this example, you can connect from Amazon Bedrock to a PostgreSQL database running on an EC2 instance in the same VPC, generate vector embeddings using Bedrock, and store and search those embeddings in the PostgreSQL database using the PGVector class from LangChain.
